@@ -15,15 +15,14 @@ interface IERC20 {
 contract TimelockMultisigWallet {
     // Events
     event OwnerAdded(address indexed owner);
-    event OwnerRemoved(address indexed owner);
     event ThresholdChanged(uint256 newThreshold);
     event TransactionCreated(uint256 indexed txId, address indexed to, uint256 value, bytes data, address tokenAddress);
-    event TransactionApproved(uint256 indexed txId, address indexed owner);
+    event TransactionApprovalVote(uint256 indexed txId, address indexed owner);
+    event TransactionApproved(uint256 indexed txId);
     event TransactionCancelled(uint256 indexed txId);
-    event TransactionCancellationRequested(uint256 indexed txId, address indexed owner);
+    event TransactionCancellationVote(uint256 indexed txId, address indexed owner);
     event TransactionExecuted(uint256 indexed txId);
     event Deposit(address indexed sender, uint256 amount);
-    event ERC20Deposited(address indexed token, address indexed sender, uint256 amount);
 
     // Transaction structure
     struct Transaction {
@@ -203,11 +202,12 @@ contract TimelockMultisigWallet {
         approved[_txId][msg.sender] = true;
         transactions[_txId].approvalCount += 1;
         
-        emit TransactionApproved(_txId, msg.sender);
+        emit TransactionApprovalVote(_txId, msg.sender);
         
         // Set the timestamp when threshold is reached
         if (transactions[_txId].approvalCount == threshold && transactions[_txId].timestamp == 0) {
             transactions[_txId].timestamp = block.timestamp;
+            emit TransactionApproved(_txId);
         }
     }
 
@@ -229,7 +229,7 @@ contract TimelockMultisigWallet {
         cancelRequested[_txId][msg.sender] = true;
         transactions[_txId].cancellationCount += 1;
         
-        emit TransactionCancellationRequested(_txId, msg.sender);
+        emit TransactionCancellationVote(_txId, msg.sender);
         
         // If cancellation threshold reached, cancel the transaction
         if (transactions[_txId].cancellationCount >= threshold) {
