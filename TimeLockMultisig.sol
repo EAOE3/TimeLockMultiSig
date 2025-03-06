@@ -7,9 +7,8 @@ pragma solidity ^0.8.17;
  * Supports both ETH and ERC20 token transfers with a 48-hour cooldown period.
  */
 interface IERC20 {
-    function transfer(address to, uint256 amount) external returns (bool);
+    function transfer(address to, uint256 amount) external;
     function balanceOf(address account) external view returns (uint256);
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
 }
 
 contract TimelockMultisigWallet {
@@ -259,8 +258,7 @@ contract TimelockMultisigWallet {
         } else {
             // ERC20 transaction
             IERC20 token = IERC20(transaction.tokenAddress);
-            bool success = token.transfer(transaction.to, transaction.amount);
-            require(success, "ERC20 transfer failed");
+            token.transfer(transaction.to, transaction.amount);
         }
         
         emit TransactionExecuted(_txId);
